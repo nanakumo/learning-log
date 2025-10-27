@@ -16,16 +16,16 @@ SELECT item_name, price FROM item WHERE price >= 150;
 SELECT item_name, price FROM item WHERE price <= 1000;
 --〜以上〜以下（範囲指定）
 SELECT item_name, price FROM item WHERE price >= 100 AND price <= 300;
-SELECT item_name, price FROM item WHERE price BETWEEN 100 AND 300; 
+SELECT item_name, price FROM item WHERE price BETWEEN 100 AND 300;
 
 --IS NULL / IS NOT NULL
 SELECT item_id, item_name FROM item WHERE item_name IS NULL;
 SELECT item_id, item_name FROM item WHERE item_name IS NOT NULL;
 
 --OR（いずれか）
-SELECT item_name FROM item WHERE item_name = 'みかん' OR item_name = 'りんご';  
+SELECT item_name FROM item WHERE item_name = 'みかん' OR item_name = 'りんご';
 
---IN（ランダム抽出）
+--IN（値を指定して絞る）
 SELECT item_id, item_name FROM item WHERE item_id IN(1,3,4);
 
 --LIKE（あいまい検索）
@@ -51,7 +51,7 @@ SELECT COUNT(item_name) FROM item;
 --AVG
 SELECT AVG(price) FROM item;
 --SUM
-SELECT SUM(price) AS total FROM item; 
+SELECT SUM(price) AS total FROM item;
 --MAX
 SELECT MAX(price) FROM item;
 --GROUP BY
