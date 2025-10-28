@@ -34,5 +34,3 @@ CREATE TABLE order_detail(
 CREATE INDEX idx_order_table_company_id ON order_table(company_id);
 CREATE INDEX idx_order_detail_order_id ON order_detail(order_id);
 CREATE INDEX idx_order_detail_product_id ON order_detail(product_id);
-
-

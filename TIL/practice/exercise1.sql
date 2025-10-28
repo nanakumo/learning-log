@@ -57,7 +57,7 @@ LIMIT 5;
 --Q11: prefectureを昇順で並べ替え、さらにbirthdayを降順で並べ替え、最初から20件を表示（フィールドは全て表示）
 SELECT * FROM member_list
 ORDER BY prefecture COLLATE "ja_JP.UTF-8" ASC, birthday DESC
-LIMIT 20
+LIMIT 20;
 
 -- `COLLATE "ja_JP.UTF-8"` を列名の直後に指定することで、
 -- 「これは日本語です。日本語の辞書順（あいうえお順）で並び替えてください」
