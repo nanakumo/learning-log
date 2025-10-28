@@ -48,3 +48,7 @@ INSERT INTO football(player_name) VALUES('鈴木');
 INSERT INTO baseball(player_name) VALUES('屋敷');
 INSERT INTO baseball(player_name) VALUES('王');
 INSERT INTO baseball(player_name) VALUES('鈴木');
+
+--10月28日分追記
+INSERT INTO item(item_id, item_name, price, create_date, status)
+VALUES(8,'オレンジ', 300, '2025-10-28', true);
