@@ -12,8 +12,8 @@ CREATE TABLE company(
     PRIMARY KEY(company_id)
 );
 
--- orderはSQLの予約語なのでorder_tableに変更
-CREATE TABLE order_table(
+-- orderはSQLの予約語なのでordersに変更
+CREATE TABLE orders(
     order_id SERIAL,
     order_date DATE NOT NULL,
     company_id INTEGER,
@@ -27,10 +27,10 @@ CREATE TABLE order_detail(
     product_id INTEGER,
     quantity INTEGER NOT NULL,
     PRIMARY KEY(order_detail_id),
-    FOREIGN KEY(order_id) REFERENCES order_table(order_id),
+    FOREIGN KEY(order_id) REFERENCES orders(order_id),
     FOREIGN KEY(product_id) REFERENCES product(product_id)
 );
 
-CREATE INDEX idx_order_table_company_id ON order_table(company_id);
+CREATE INDEX idx_orders_company_id ON orders(company_id);
 CREATE INDEX idx_order_detail_order_id ON order_detail(order_id);
 CREATE INDEX idx_order_detail_product_id ON order_detail(product_id);
