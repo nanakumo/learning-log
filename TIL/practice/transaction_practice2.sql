@@ -37,8 +37,14 @@ INSERT INTO users(name, balance) VALUES
 -- transaction開始
 -- 成功例
 BEGIN;
+-- 行ロック
+SELECT id, price, stock FROM products
+WHERE name = 'iPhone 17' FOR UPDATE;
 -- 在庫を 1 減らす
 UPDATE products SET stock = stock - 1 WHERE name = 'iPhone 17' AND stock > 0;
+-- 行ロック
+SELECT id, balance FROM users
+WHERE id = 1 FOR UPDATE;
 -- ユーザ残高から商品価格を差し引く。残高が価格以上のときのみ更新される。
 UPDATE users SET balance = balance - (SELECT price FROM products WHERE name = 'iPhone 17')
 WHERE id = 1 AND balance >= (SELECT price FROM products WHERE name = 'iPhone 17');
@@ -49,10 +55,13 @@ COMMIT;
 
 -- transaction開始
 -- 失敗例: 残高不足
--- (想定) 残高不足を検証したいケース
 BEGIN;
+-- 行ロック
+SELECT id, price, stock FROM products WHERE name = 'iPhone 17' FOR UPDATE;
 -- 在庫を 1 減らす
 UPDATE products SET stock = stock - 1 WHERE name = 'iPhone 17' AND stock > 0;
+-- 行ロック
+SELECT id, balance FROM users WHERE id = 2 FOR UPDATE;
 -- ユーザ残高から商品価格を差し引く。
 UPDATE users SET balance = balance - (SELECT price FROM products WHERE name = 'iPhone 17')
 WHERE id = 2 AND balance >= (SELECT price FROM products WHERE name = 'iPhone 17');  -- 本来は不足ユーザを対象にする想定
