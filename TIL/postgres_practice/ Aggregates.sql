@@ -124,9 +124,83 @@ SELECT ROW_NUMBER() OVER(ORDER BY joindate) AS row_number, firstname, surname
 -- Q17: Output the facility id that has the highest number of slots booked. Ensure that in the event of a tie, all tieing results get output.
 -- まだ理解できないが後でもう少し考えてみる
 select facid, total from (
-	select facid, sum(slots) total, rank() over (order by sum(slots) desc) rank
+	select facid, sum(slots) AS total, rank() over (order by sum(slots) desc) rank
         	from cd.bookings
 		group by facid
 	) as ranked
-	where rank = 1   
+	where rank = 1
 
+-- Q18: Produce a list of members (including guests), along with the number of hours they've booked in facilities, rounded to the nearest ten hours. Rank them by this rounded figure, producing output of first name, surname, rounded hours, rank. Sort by rank, surname, and first name.
+SELECT mems.firstname, mems.surname, ((SUM(bks.slots)+10)/20)*10 AS hours, RANK() OVER(ORDER BY ((SUM(bks.slots)+10)/20)*10 DESC) AS rank
+	FROM cd.members mems
+		INNER JOIN cd.bookings bks
+		ON mems.memid = bks.memid
+	GROUP BY mems.firstname, mems.surname
+ORDER BY rank, firstname, surname;
+
+-- Q19: Produce a list of the top three revenue generating facilities (including ties). Output facility name and rank, sorted by rank and facility name.
+SELECT name, rank FROM(
+	SELECT facs.name, RANK() OVER(ORDER BY SUM(
+			CASE
+				WHEN bks.memid = 0 THEN slots * guestcost
+				ELSE slots * membercost
+			END) DESC) AS rank
+		FROM cd.facilities facs
+			INNER JOIN cd.bookings bks
+			ON facs.facid = bks.facid
+		GROUP BY facs.name
+) AS subq
+	WHERE rank <= 3
+ORDER BY rank, name;
+
+-- Q20: Classify facilities into equally sized groups of high, average, and low based on their revenue. Order by classification and facility name.
+SELECT name, CASE
+		WHEN class = 1 THEN 'high'
+		WHEN class = 2 THEN 'average'
+		WHEN class = 3 THEN 'low'
+	END AS revenue
+	FROM (
+		SELECT name,  NTILE(3) OVER(ORDER BY SUM(CASE
+				WHEN memid = 0 THEN slots * guestcost
+				ELSE slots * membercost
+				END) DESC) AS class
+			FROM cd.facilities facs
+				INNER JOIN cd.bookings bks
+				ON facs.facid = bks.facid
+			GROUP BY name
+		) AS subq
+ORDER BY class, name;
+
+-- Q21: Based on the 3 complete months of data so far, calculate the amount of time each facility will take to repay its cost of ownership. Remember to take into account ongoing monthly maintenance. Output facility name and payback time in months, order by facility name. Don't worry about differences in month lengths, we're only looking for a rough value here!
+SELECT facs.name, facs.initialoutlay / (SUM(CASE
+		WHEN bks.memid = 0 THEN bks.slots * facs.guestcost
+		ELSE bks.slots * facs.membercost
+		END) / 3 - facs.monthlymaintenance) AS months
+	FROM cd.facilities facs
+		INNER JOIN cd.bookings bks
+		ON facs.facid = bks.facid
+	GROUP BY name, facs.initialoutlay,facs.monthlymaintenance
+ORDER BY name;
+
+-- Q22: For each day in August 2012, calculate a rolling average of total revenue over the previous 15 days. Output should contain date and revenue columns, sorted by the date. Remember to account for the possibility of a day having zero revenue.
+-- すごく難しかった、理解するのに時間がかかる（30%しか理解できていない状態です）
+SELECT 	dategen.date,
+	(
+		SELECT SUM(CASE
+			WHEN memid = 0 THEN slots * facs.guestcost
+			ELSE slots * facs.membercost
+		END) AS rev
+
+		FROM cd.bookings bks
+		INNER JOIN  cd.facilities facs
+			ON bks.facid = facs.facid
+		WHERE bks.starttime > dategen.date - interval '14 days'
+			AND bks.starttime < dategen.date + interval '1 day'
+	)/15 as revenue
+	FROM
+	(
+		-- generates a list of days in august
+		SELECT 	cast(generate_series(timestamp '2012-08-01',
+			'2012-08-31','1 day') as date) as date
+	)  as dategen
+ORDER BY dategen.date;
