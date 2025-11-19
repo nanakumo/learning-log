@@ -11,8 +11,7 @@ import (
 )
 
 func NewDB() *gorm.DB {
-	// Localの.envを読み込む
-	if os.Getenv("GO_ENV") == "dev" {
+	if shouldLoadDotEnv() {
 		if err := godotenv.Load(); err != nil {
 			log.Fatalln(err)
 		}
@@ -39,4 +38,19 @@ func CloseDB(db *gorm.DB) {
 	}
 	sqlDB.Close()
 	fmt.Println("DB disconnected")
+}
+
+// shouldLoadDotEnv は .env ファイルをロードすべきかどうかを判断する関数
+func shouldLoadDotEnv() bool {
+	env := os.Getenv("GO_ENV")
+	if env == "dev" {
+		return true
+	}
+	if env != "" {
+		return false
+	}
+	if _, err := os.Stat(".env"); err == nil {
+		return true
+	}
+	return false
 }
