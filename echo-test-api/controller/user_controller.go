@@ -41,7 +41,7 @@ func ( uc *userController ) SignUp (c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 	// 新規ユーザー作成に成功した場合は、作成したユーザー情報を返す
-	return c.JSON(http.StatusOK, resUser)
+	return c.JSON(http.StatusCreated, resUser)
 }
 
 func ( uc *userController ) Login (c echo.Context) error {
