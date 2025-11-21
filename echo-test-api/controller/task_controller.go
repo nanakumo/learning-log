@@ -84,12 +84,23 @@ func (tc *taskController) CreateTask(c echo.Context) error {
 	if !ok {
 		return c.JSON(http.StatusUnauthorized, "Invalid token claims")
 	}
+	// 通过 Claims 取出 userID
 	userID := claims.UserID
-	task := model.Task{}
-	if err := c.Bind(&task); err != nil {
+	// 从请求体中获取任务数据
+	req := CreateTaskRequest{}
+	// Bind请求体到req结构体
+	// 如果绑定失败，返回400错误
+	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, err.Error())
 	}
+	// 将请求转换为任务实体，使用默认状态
+	task, err := req.toTask(model.TaskStatusTodo)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+	// 设置任务的用户ID
 	task.UserId = userID
+	// 调用用例层的创建方法
 	taskRes, err := tc.taskUsecase.CreateTask(task)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
@@ -115,11 +126,21 @@ func (tc *taskController) UpdateTask(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, "Invalid task ID")
 	}
-	task := model.Task{}
-	if err := c.Bind(&task); err != nil {
+	// 从请求体中获取更新数据
+	req := UpdateTaskRequest{}
+	// Bind请求体到req结构体
+	// 如果绑定失败，返回400错误
+	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, err.Error())
 	}
-	taskRes, err := tc.taskUsecase.UpdateTask(task, userID, uint(taskID))
+	// 将更新请求转换为用于存储库更新的映射
+	updates := map[string]interface{}{}
+	// 如果转换失败，返回400错误
+	if err := req.applyToUpdates(updates); err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+	// 调用用例层的更新方法
+	taskRes, err := tc.taskUsecase.UpdateTask(updates, userID, uint(taskID))
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
