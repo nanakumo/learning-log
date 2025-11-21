@@ -67,7 +67,7 @@ func ( uc *userController ) Login (c echo.Context) error {
 	cookie.Domain = os.Getenv("API_DOMAIN")
 	// cookie.Secure = true
 	cookie.HttpOnly = true // JavaScriptからのアクセスを防ぐためにHttpOnlyを設定
-	cookie.SameSite = http.SameSiteNoneMode // クロスサイトリクエストでもcookieを送信するためにSameSite=Noneを設定
+	cookie.SameSite = http.SameSiteLaxMode // クロスサイトリクエストでもcookieを送信するためにSameSite=Noneを設定
 	c.SetCookie(cookie) // SetCookieはレスポンスにSet-Cookieヘッダーを追加する
 	return c.NoContent(http.StatusOK)
 }
@@ -82,7 +82,7 @@ func ( uc *userController ) Logout (c echo.Context) error {
 	cookie.Domain = os.Getenv("API_DOMAIN")
 	// cookie.Secure = true
 	cookie.HttpOnly = true
-	cookie.SameSite = http.SameSiteNoneMode
+	cookie.SameSite = http.SameSiteLaxMode
 	c.SetCookie(cookie)
 	return c.NoContent(http.StatusOK)
 }
