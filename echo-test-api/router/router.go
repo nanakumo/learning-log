@@ -2,7 +2,10 @@ package router
 
 import (
 	"go-test-api/controller"
+	"go-test-api/model"
 	"os"
+
+	"github.com/golang-jwt/jwt/v5"
 	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"
 )
@@ -18,8 +21,9 @@ func NewRouter(uc controller.UserController, tc controller.TaskController) *echo
 	t := e.Group("/tasks")
 	// JWT Middleware
 	t.Use(echojwt.WithConfig(echojwt.Config{
-		SigningKey : []byte(os.Getenv("SECRET")),
-		TokenLookup: "cookie:token",
+		SigningKey:    []byte(os.Getenv("SECRET")),
+		TokenLookup:   "cookie:token",
+		NewClaimsFunc: func(c echo.Context) jwt.Claims { return new(model.JWTClaims) },
 	}))
 	t.GET("", tc.GetAllTasks)
 	t.GET("/:taskID", tc.GetTaskById)

@@ -29,10 +29,18 @@ func NewTaskController(taskUsecase usecase.TaskUsecase) TaskController {
 }
 
 func (tc *taskController) GetAllTasks(c echo.Context) error {
-	// 从JWT token中获取userID
-	user := c.Get("user").(*jwt.Token)
-	claims := user.Claims.(jwt.MapClaims)
-	userID := uint(claims["user_id"].(float64))
+	// 从 Echo 的 context 里把中间件验证过的 JWT token 取出来
+	token, ok := c.Get("user").(*jwt.Token)
+	if !ok {
+		return c.JSON(http.StatusUnauthorized, "Invalid token")
+	}
+	// 从 token 里把我们之前定义的自定义 Claims 取出来
+	claims, ok := token.Claims.(*model.JWTClaims)
+	if !ok {
+		return c.JSON(http.StatusUnauthorized, "Invalid token claims")
+	}
+	// 通过 Claims 取出 userID
+	userID := claims.UserID
 
 	tasksRes, err := tc.taskUsecase.GetAllTasks(userID)
 	if err != nil {
@@ -43,14 +51,23 @@ func (tc *taskController) GetAllTasks(c echo.Context) error {
 
 func (tc *taskController) GetTaskById(c echo.Context) error {
 	// 从JWT token中获取userID
-	user := c.Get("user").(*jwt.Token)
-	claims := user.Claims.(jwt.MapClaims)
-	userID := uint(claims["user_id"].(float64))
+	token, ok := c.Get("user").(*jwt.Token)
+	if !ok {
+		return c.JSON(http.StatusUnauthorized, "Invalid token")
+	}
+	claims, ok := token.Claims.(*model.JWTClaims)
+	if !ok {
+		return c.JSON(http.StatusUnauthorized, "Invalid token claims")
+	}
+	userID := claims.UserID
 	// 从URL参数中获取taskID
 	id := c.Param("taskID")
 	// stringをuintに変換
-	taskID, _ := strconv.Atoi(id)
-	taskRes , err := tc.taskUsecase.GetAllByUserID(userID, uint(taskID))
+	taskID, err := strconv.Atoi(id)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, "Invalid task ID")
+	}
+	taskRes, err := tc.taskUsecase.GetAllByUserID(userID, uint(taskID))
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, "Invalid task ID")
 	}
@@ -59,9 +76,15 @@ func (tc *taskController) GetTaskById(c echo.Context) error {
 
 func (tc *taskController) CreateTask(c echo.Context) error {
 	// 从JWT token中获取userID
-	user := c.Get("user").(*jwt.Token)
-	claims := user.Claims.(jwt.MapClaims)
-	userID := uint(claims["user_id"].(float64))
+	token, ok := c.Get("user").(*jwt.Token)
+	if !ok {
+		return c.JSON(http.StatusUnauthorized, "Invalid token")
+	}
+	claims, ok := token.Claims.(*model.JWTClaims)
+	if !ok {
+		return c.JSON(http.StatusUnauthorized, "Invalid token claims")
+	}
+	userID := claims.UserID
 	task := model.Task{}
 	if err := c.Bind(&task); err != nil {
 		return c.JSON(http.StatusBadRequest, err.Error())
@@ -76,13 +99,22 @@ func (tc *taskController) CreateTask(c echo.Context) error {
 
 func (tc *taskController) UpdateTask(c echo.Context) error {
 	// 从JWT token中获取userID
-	user := c.Get("user").(*jwt.Token)
-	claims := user.Claims.(jwt.MapClaims)
-	userID := uint(claims["user_id"].(float64))
+	token, ok := c.Get("user").(*jwt.Token)
+	if !ok {
+		return c.JSON(http.StatusUnauthorized, "Invalid token")
+	}
+	claims, ok := token.Claims.(*model.JWTClaims)
+	if !ok {
+		return c.JSON(http.StatusUnauthorized, "Invalid token claims")
+	}
+	userID := claims.UserID
 	// 从URL参数中获取taskID
 	id := c.Param("taskID")
 	// stringをuintに変換
-	taskID, _ := strconv.Atoi(id)
+	taskID, err := strconv.Atoi(id)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, "Invalid task ID")
+	}
 	task := model.Task{}
 	if err := c.Bind(&task); err != nil {
 		return c.JSON(http.StatusBadRequest, err.Error())
@@ -96,13 +128,22 @@ func (tc *taskController) UpdateTask(c echo.Context) error {
 
 func (tc *taskController) DeleteTask(c echo.Context) error {
 	// 从JWT token中获取userID
-	user := c.Get("user").(*jwt.Token)
-	claims := user.Claims.(jwt.MapClaims)
-	userID := uint(claims["user_id"].(float64))
+	token, ok := c.Get("user").(*jwt.Token)
+	if !ok {
+		return c.JSON(http.StatusUnauthorized, "Invalid token")
+	}
+	claims, ok := token.Claims.(*model.JWTClaims)
+	if !ok {
+		return c.JSON(http.StatusUnauthorized, "Invalid token claims")
+	}
+	userID := claims.UserID
 	// 从URL参数中获取taskID
 	id := c.Param("taskID")
 	// stringをuintに変換
-	taskID, _ := strconv.Atoi(id)
+	taskID, err := strconv.Atoi(id)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, "Invalid task ID")
+	}
 	if err := tc.taskUsecase.DeleteTask(userID, uint(taskID)); err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
