@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"go-test-api/dto"
 	"go-test-api/model"
 	"go-test-api/usecase"
 	"net/http"
@@ -86,15 +87,15 @@ func (tc *taskController) CreateTask(c echo.Context) error {
 	}
 	// 通过 Claims 取出 userID
 	userID := claims.UserID
-	// 从请求体中获取任务数据
-	req := CreateTaskRequest{}
+	// 从请求体中获取任务数据（使用 DTO 层，避免直接绑定内部模型）
+	req := dto.CreateTaskRequest{}
 	// Bind请求体到req结构体
 	// 如果绑定失败，返回400错误
 	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, err.Error())
 	}
 	// 将请求转换为任务实体，使用默认状态
-	task, err := req.toTask(model.TaskStatusTodo)
+	task, err := req.ToTask(model.TaskStatusTodo)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, err.Error())
 	}
@@ -126,8 +127,8 @@ func (tc *taskController) UpdateTask(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, "Invalid task ID")
 	}
-	// 从请求体中获取更新数据
-	req := UpdateTaskRequest{}
+	// 从请求体中获取更新数据（使用 DTO 层，避免直接暴露内部模型）
+	req := dto.UpdateTaskRequest{}
 	// Bind请求体到req结构体
 	// 如果绑定失败，返回400错误
 	if err := c.Bind(&req); err != nil {
@@ -136,7 +137,7 @@ func (tc *taskController) UpdateTask(c echo.Context) error {
 	// 将更新请求转换为用于存储库更新的映射
 	updates := map[string]interface{}{}
 	// 如果转换失败，返回400错误
-	if err := req.applyToUpdates(updates); err != nil {
+	if err := req.ApplyToUpdates(updates); err != nil {
 		return c.JSON(http.StatusBadRequest, err.Error())
 	}
 	// 调用用例层的更新方法

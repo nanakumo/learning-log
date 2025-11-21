@@ -1,15 +1,16 @@
 package usecase
 
 import (
+	"go-test-api/dto"
 	"go-test-api/model"
 	"go-test-api/repository"
 )
 
 type TaskUsecase interface {
-	GetAllTasks(userID uint) (*[]model.TaskResponse, error)
-	GetAllByUserID(userID uint, taskID uint) (*model.TaskResponse, error)
-	CreateTask(task model.Task) (model.TaskResponse, error)
-	UpdateTask(updates map[string]interface{}, userID uint, taskID uint) (model.TaskResponse, error)
+	GetAllTasks(userID uint) (*[]dto.TaskResponse, error)
+	GetAllByUserID(userID uint, taskID uint) (*dto.TaskResponse, error)
+	CreateTask(task model.Task) (dto.TaskResponse, error)
+	UpdateTask(updates map[string]interface{}, userID uint, taskID uint) (dto.TaskResponse, error)
 	DeleteTask(userID uint, taskID uint) error
 }
 
@@ -23,15 +24,15 @@ func NewTaskUsecase(taskRepo repository.TaskRepository) TaskUsecase {
 	}
 }
 
-func (tu *taskUsecase) GetAllTasks(userID uint) (*[]model.TaskResponse, error) {
+func (tu *taskUsecase) GetAllTasks(userID uint) (*[]dto.TaskResponse, error) {
 	tasks, err := tu.taskRepo.GetAllTasks(userID)
 	if err != nil {
 		return nil, err
 	}
 	// 转换为响应格式
-	resTasks := []model.TaskResponse{}
+	resTasks := []dto.TaskResponse{}
 	for _, v := range *tasks {
-		t := model.TaskResponse{
+		t := dto.TaskResponse{
 			ID:        v.ID,
 			Title:     v.Title,
 			Status:    v.Status,
@@ -43,12 +44,12 @@ func (tu *taskUsecase) GetAllTasks(userID uint) (*[]model.TaskResponse, error) {
 	return &resTasks, nil
 }
 
-func (tu *taskUsecase) GetAllByUserID(userID uint, taskID uint) (*model.TaskResponse, error) {
+func (tu *taskUsecase) GetAllByUserID(userID uint, taskID uint) (*dto.TaskResponse, error) {
 	task, err := tu.taskRepo.GetTaskById(userID, taskID)
 	if err != nil {
-		return &model.TaskResponse{}, err
+		return &dto.TaskResponse{}, err
 	}
-	resTask := model.TaskResponse{
+	resTask := dto.TaskResponse{
 		ID:        task.ID,
 		Title:     task.Title,
 		Status:    task.Status,
@@ -58,11 +59,11 @@ func (tu *taskUsecase) GetAllByUserID(userID uint, taskID uint) (*model.TaskResp
 	return &resTask, nil
 }
 
-func (tu *taskUsecase) CreateTask(task model.Task) (model.TaskResponse, error) {
+func (tu *taskUsecase) CreateTask(task model.Task) (dto.TaskResponse, error) {
 	if err := tu.taskRepo.CreateTask(&task); err != nil {
-		return model.TaskResponse{}, err
+		return dto.TaskResponse{}, err
 	}
-	resTask := model.TaskResponse{
+	resTask := dto.TaskResponse{
 		ID:        task.ID,
 		Title:     task.Title,
 		Status:    task.Status,
@@ -72,12 +73,12 @@ func (tu *taskUsecase) CreateTask(task model.Task) (model.TaskResponse, error) {
 	return resTask, nil
 }
 
-func (tu *taskUsecase) UpdateTask(updates map[string]interface{}, userID uint, taskID uint) (model.TaskResponse, error) {
+func (tu *taskUsecase) UpdateTask(updates map[string]interface{}, userID uint, taskID uint) (dto.TaskResponse, error) {
 	updated, err := tu.taskRepo.UpdateTask(userID, taskID, updates)
 	if err != nil {
-		return model.TaskResponse{}, err
+		return dto.TaskResponse{}, err
 	}
-	resTask := model.TaskResponse{
+	resTask := dto.TaskResponse{
 		ID:        updated.ID,
 		Title:     updated.Title,
 		Status:    updated.Status,
