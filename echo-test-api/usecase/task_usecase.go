@@ -4,6 +4,7 @@ import (
 	"go-test-api/dto"
 	"go-test-api/model"
 	"go-test-api/repository"
+	"go-test-api/validator"
 )
 
 type TaskUsecase interface {
@@ -16,11 +17,13 @@ type TaskUsecase interface {
 
 type taskUsecase struct {
 	taskRepo repository.TaskRepository
+	tv 	 validator.TaskValidator
 }
 
-func NewTaskUsecase(taskRepo repository.TaskRepository) TaskUsecase {
+func NewTaskUsecase(taskRepo repository.TaskRepository, tv validator.TaskValidator) TaskUsecase {
 	return &taskUsecase{
 		taskRepo: taskRepo,
+		tv:       tv,
 	}
 }
 
@@ -60,6 +63,11 @@ func (tu *taskUsecase) GetAllByUserID(userID uint, taskID uint) (*dto.TaskRespon
 }
 
 func (tu *taskUsecase) CreateTask(task model.Task) (dto.TaskResponse, error) {
+	// 验证任务数据
+	if err := tu.tv.TaskValidator(task);  err != nil {
+		return dto.TaskResponse{}, err
+	}
+	// 创建任务
 	if err := tu.taskRepo.CreateTask(&task); err != nil {
 		return dto.TaskResponse{}, err
 	}
@@ -74,6 +82,15 @@ func (tu *taskUsecase) CreateTask(task model.Task) (dto.TaskResponse, error) {
 }
 
 func (tu *taskUsecase) UpdateTask(updates map[string]interface{}, userID uint, taskID uint) (dto.TaskResponse, error) {
+	// 验证更新数据
+	tempTask := model.Task{}
+	if title, ok := updates["title"].(string); ok {
+		tempTask.Title = title
+	}
+	if err := tu.tv.TaskValidator(tempTask); err != nil {
+		return dto.TaskResponse{}, err
+	}
+	// 更新任务
 	updated, err := tu.taskRepo.UpdateTask(userID, taskID, updates)
 	if err != nil {
 		return dto.TaskResponse{}, err

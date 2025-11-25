@@ -3,6 +3,7 @@ package usecase
 import (
 	"go-test-api/model"
 	"go-test-api/repository"
+	"go-test-api/validator"
 	"os"
 	"time"
 
@@ -17,14 +18,19 @@ type UserUsecase interface {
 
 type userUsecase struct {
 	userRepo repository.UserRepository //只依赖 UserRepository 的 interface
+	uv 	 validator.UserValidator
 }
 
 // NewUser は UserUsecase のコンストラクタ（usecaseに依存性を注入するため）为了返回接口值
-func NewUserUsecase(userRepo repository.UserRepository) UserUsecase {
-	return &userUsecase{userRepo: userRepo}
+func NewUserUsecase(userRepo repository.UserRepository, uv validator.UserValidator) UserUsecase {
+	return &userUsecase{userRepo: userRepo, uv: uv}
 }
 
 func (u *userUsecase) SignUp (user *model.User) (model.UserResponse, error) {
+	// バリデーションを実行
+	if err := u.uv.UserValidator(*user); err != nil {
+		return model.UserResponse{}, err
+	}
 	// パスワードをハッシュ化
 	hash, err := bcrypt.GenerateFromPassword([]byte(user.Password), 10)
 	if err != nil {
@@ -43,6 +49,10 @@ func (u *userUsecase) SignUp (user *model.User) (model.UserResponse, error) {
 
 // string 代表 JWT token
 func (u *userUsecase) Login ( user *model.User) (string , error){
+	// バリデーションを実行
+	if err := u.uv.UserValidator(*user); err != nil {
+		return "", err
+	}
 	// client から送られてきた email が DB に存在するか確認
 	// 最初にemailで検索するuserのobjectを格納する変数
 	storedUser := model.User{}
