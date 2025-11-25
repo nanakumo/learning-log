@@ -13,7 +13,10 @@ func main() {
 	userRepository := repository.NewUserRepository(db)
 	userUsecase := usecase.NewUserUsecase(userRepository)
 	userController := controller.NewUserController(userUsecase)
-	e := router.NewUserRouter(userController)
+	taskRepository := repository.NewTaskRepository(db)
+	taskUsecase := usecase.NewTaskUsecase(taskRepository)
+	taskController := controller.NewTaskController(taskUsecase)
+	e := router.NewRouter(userController, taskController)
 	// echoのinstanceをを使ってサーバー起動
 	e.Logger.Fatal(e.Start(":8088"))  // 失敗した場合はログにエラーを出力して終了
 }
